@@ -324,6 +324,11 @@ class ScreenerService:
             if r1 is None or r2 is None:
                 continue
 
+            # Filter out physically docked co-orbiting elements (e.g. ISS/Tiangong docked modules)
+            # which are clamped together in space (rel_vel ~ 0.0 km/s and miss_dist < 100m)
+            if rel_v < 0.05 and miss_m < 100.0:
+                continue
+
             prob = compute_collision_probability(miss_m)
             risk = determine_risk_level(miss_m)
 

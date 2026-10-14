@@ -37,33 +37,33 @@ export const TopTelemetryBar: React.FC = () => {
   const speedOptions = [1, 10, 60];
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-9 z-40 bg-[#06080c] border-b border-white/[0.08] flex items-center justify-between px-3 text-[11px] font-mono select-none">
+    <header className="fixed top-0 left-0 right-0 h-9 z-40 bg-[#06080c] border-b border-white/[0.08] flex items-center justify-between px-3 text-[11px] font-mono select-none whitespace-nowrap overflow-hidden">
       {/* Left Cluster: Brand & Core Subsystem Telemetry */}
-      <div className="flex items-center">
+      <div className="flex items-center shrink-0 min-w-0">
         {/* Status LED & Workstation Callout */}
-        <div className="flex items-center pr-3 border-r border-white/[0.08]">
-          <span className="w-1.5 h-1.5 rounded-none bg-emerald-400 inline-block mr-2" />
-          <span className="font-bold text-white tracking-widest text-[11px]">
+        <div className="flex items-center pr-3 border-r border-white/[0.08] shrink-0 whitespace-nowrap">
+          <span className="w-1.5 h-1.5 rounded-none bg-emerald-400 inline-block mr-2 shrink-0" />
+          <span className="font-bold text-white tracking-widest text-[11px] whitespace-nowrap">
             AEGIS <span className="text-slate-500">//</span> ORBITAL OPS
           </span>
-          <span className="ml-2 px-1 py-0.2 text-[9px] bg-slate-900 border border-slate-700/80 text-sky-400 font-semibold tracking-wider">
-            WORKSTATION-01
+          <span className="ml-2 px-1 py-0.2 text-[9px] bg-slate-900 border border-slate-700/80 text-sky-400 font-semibold tracking-wider whitespace-nowrap shrink-0">
+            WS-01
           </span>
         </div>
 
         {/* Dense Live Subsystem Status */}
-        <div className="hidden md:flex items-center text-slate-400 font-mono text-[10px] pl-3 gap-2 tabular-nums">
-          <div>
+        <div className="hidden lg:flex items-center text-slate-400 font-mono text-[10px] pl-3 gap-2.5 tabular-nums whitespace-nowrap shrink-0">
+          <div className="whitespace-nowrap">
             <span className="text-slate-500">CATALOG:</span>{' '}
             <span className="text-slate-200 font-semibold">{(catalogCount || 10412).toLocaleString()} OBJ</span>
           </div>
-          <span className="h-3 w-px bg-white/[0.08]" />
-          <div>
+          <span className="h-3 w-px bg-white/[0.08] hidden xl:block" />
+          <div className="hidden xl:block whitespace-nowrap">
             <span className="text-slate-500">PROPAGATOR:</span>{' '}
-            <span className="text-sky-400 font-semibold">SGP4-WORKER [60 FPS]</span>
+            <span className="text-sky-400 font-semibold">SGP4-WORKER</span>
           </div>
-          <span className="h-3 w-px bg-white/[0.08]" />
-          <div>
+          <span className="h-3 w-px bg-white/[0.08] hidden 2xl:block" />
+          <div className="hidden 2xl:block whitespace-nowrap">
             <span className="text-slate-500">SCREENING:</span>{' '}
             <span className="text-emerald-400 font-semibold">cKDTREE [&lt;2ms]</span>
           </div>
@@ -71,16 +71,16 @@ export const TopTelemetryBar: React.FC = () => {
       </div>
 
       {/* Center Cluster: Mission UTC Clock & Time Warp Controls */}
-      <div className="flex items-center gap-2">
-        <div className="hidden lg:flex items-center px-2 py-0.5 bg-[#0b0f17] border border-white/[0.08] text-slate-300 font-mono text-[10px] tabular-nums">
+      <div className="flex items-center gap-2 shrink-0 whitespace-nowrap">
+        <div className="hidden md:flex items-center px-2 py-0.5 bg-[#0b0f17] border border-white/[0.08] text-slate-300 font-mono text-[10px] tabular-nums whitespace-nowrap shrink-0">
           <span className="text-slate-500 mr-1.5">EPOCH:</span>
-          <span className="text-white font-medium" suppressHydrationWarning>
+          <span className="text-white font-medium whitespace-nowrap" suppressHydrationWarning>
             {utcClock || '2026-10-14 13:30:14.82 UTC'}
           </span>
         </div>
 
         {/* Warp Switches */}
-        <div className="flex items-center border border-white/[0.08] bg-[#0b0f17]">
+        <div className="flex items-center border border-white/[0.08] bg-[#0b0f17] shrink-0 whitespace-nowrap">
           {speedOptions.map((speed) => (
             <button
               key={speed}
@@ -88,35 +88,35 @@ export const TopTelemetryBar: React.FC = () => {
                 if (isSimPaused) toggleSimPause();
                 setSimSpeed(speed);
               }}
-              className={`h-5 px-2 text-[10px] font-mono uppercase tracking-wider transition-colors border-r border-white/[0.08] last:border-r-0 ${
+              className={`h-5 px-1.5 text-[10px] font-mono uppercase tracking-wider transition-colors border-r border-white/[0.08] last:border-r-0 whitespace-nowrap shrink-0 ${
                 simSpeed === speed && !isSimPaused
                   ? 'bg-sky-500 text-slate-950 font-bold'
                   : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
               }`}
             >
-              [{speed}X]
+              {speed}X
             </button>
           ))}
           <button
             onClick={toggleSimPause}
-            className={`h-5 px-2 text-[10px] font-mono uppercase tracking-wider transition-colors ${
+            className={`h-5 px-1.5 text-[10px] font-mono uppercase tracking-wider transition-colors whitespace-nowrap shrink-0 ${
               isSimPaused
                 ? 'bg-amber-500 text-slate-950 font-bold'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
             }`}
           >
-            {isSimPaused ? '[RESUME]' : '[PAUSE]'}
+            {isSimPaused ? 'RESUME' : 'PAUSE'}
           </button>
         </div>
       </div>
 
       {/* Right Cluster: Camera Modes, Kessler Trigger, B2B API & Cinema Mode */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
         {/* Camera Mode Hardware Switch: GLOBAL | TCA-LOCK | SAT-CHASE */}
-        <div className="flex items-center border border-white/[0.08] bg-[#0b0f17]">
+        <div className="flex items-center border border-white/[0.08] bg-[#0b0f17] shrink-0 whitespace-nowrap">
           <button
             onClick={() => setCameraFocus('GLOBAL')}
-            className={`h-6 px-2 text-[10px] font-mono uppercase tracking-wider border-r border-white/[0.08] transition-colors ${
+            className={`h-6 px-2 text-[10px] font-mono uppercase tracking-wider border-r border-white/[0.08] transition-colors whitespace-nowrap shrink-0 ${
               cameraFocus === 'GLOBAL'
                 ? 'bg-sky-500 text-slate-950 font-bold'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -127,7 +127,7 @@ export const TopTelemetryBar: React.FC = () => {
           </button>
           <button
             onClick={() => setCameraFocus('CONJUNCTION')}
-            className={`h-6 px-2 text-[10px] font-mono uppercase tracking-wider border-r border-white/[0.08] transition-colors ${
+            className={`h-6 px-2 text-[10px] font-mono uppercase tracking-wider border-r border-white/[0.08] transition-colors whitespace-nowrap shrink-0 ${
               cameraFocus === 'CONJUNCTION'
                 ? 'bg-sky-500 text-slate-950 font-bold'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -138,7 +138,7 @@ export const TopTelemetryBar: React.FC = () => {
           </button>
           <button
             onClick={() => setCameraFocus('SAT_CHASE')}
-            className={`h-6 px-2 text-[10px] font-mono uppercase tracking-wider transition-colors ${
+            className={`h-6 px-2 text-[10px] font-mono uppercase tracking-wider transition-colors whitespace-nowrap shrink-0 ${
               cameraFocus === 'SAT_CHASE'
                 ? 'bg-sky-500 text-slate-950 font-bold'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -152,28 +152,28 @@ export const TopTelemetryBar: React.FC = () => {
         {/* Kessler Cascade Simulation Trigger */}
         <button
           onClick={toggleKesslerDemo}
-          className={`h-6 px-2.5 text-[10px] font-mono uppercase tracking-wider border transition-colors ${
+          className={`h-6 px-2 text-[10px] font-mono uppercase tracking-wider border transition-colors whitespace-nowrap shrink-0 ${
             kesslerDemo
               ? 'bg-[#f43f5e] border-[#f43f5e] text-white font-bold'
               : 'border-[#f43f5e]/40 text-[#f43f5e] hover:bg-[#f43f5e]/10'
           }`}
           title="Simulate Kessler Collision Avalanche"
         >
-          {kesslerDemo ? '[CASCADE ACTIVE]' : 'SIMULATE KESSLER IMPACT'}
+          {kesslerDemo ? '[CASCADE ACTIVE]' : 'KESSLER IMPACT'}
         </button>
 
         {/* Ephemeris Ingestion API */}
         <button
           onClick={() => setApiModalOpen(true)}
-          className="h-6 px-2 text-[10px] font-mono uppercase tracking-wider border border-white/[0.08] text-slate-300 hover:text-white hover:bg-white/[0.04]"
+          className="h-6 px-2 text-[10px] font-mono uppercase tracking-wider border border-white/[0.08] text-slate-300 hover:text-white hover:bg-white/[0.04] whitespace-nowrap shrink-0"
         >
-          EPHEMERIS API [JSON]
+          API [JSON]
         </button>
 
         {/* Raw HUD / Cinema Mode Toggle */}
         <button
           onClick={toggleCinemaMode}
-          className={`h-6 px-2 text-[10px] font-mono uppercase tracking-wider border transition-colors ${
+          className={`h-6 px-2 text-[10px] font-mono uppercase tracking-wider border transition-colors whitespace-nowrap shrink-0 ${
             cinemaMode
               ? 'bg-sky-500 text-slate-950 border-sky-400 font-bold'
               : 'border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.04]'
