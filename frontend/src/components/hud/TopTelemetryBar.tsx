@@ -9,7 +9,6 @@ export const TopTelemetryBar: React.FC = () => {
   const isSimPaused = useOrbitStore((state) => state.isSimPaused);
   const setSimSpeed = useOrbitStore((state) => state.setSimSpeed);
   const toggleSimPause = useOrbitStore((state) => state.toggleSimPause);
-  const simTime = useOrbitStore((state) => state.simTime);
   const cinemaMode = useOrbitStore((state) => state.cinemaMode);
   const toggleCinemaMode = useOrbitStore((state) => state.toggleCinemaMode);
   const kesslerDemo = useOrbitStore((state) => state.kesslerDemo);
@@ -22,7 +21,8 @@ export const TopTelemetryBar: React.FC = () => {
 
   useEffect(() => {
     const updateTime = () => {
-      const d = new Date(simTime);
+      const currentSimTime = useOrbitStore.getState().simTime || Date.now();
+      const d = new Date(currentSimTime);
       const iso = d.toISOString();
       // Format as YYYY-MM-DD HH:mm:ss.SS UTC
       const datePart = iso.substring(0, 10);
@@ -30,9 +30,9 @@ export const TopTelemetryBar: React.FC = () => {
       setUtcClock(`${datePart} ${timePart} UTC`);
     };
     updateTime();
-    const interval = setInterval(updateTime, 100);
+    const interval = setInterval(updateTime, 200);
     return () => clearInterval(interval);
-  }, [simTime]);
+  }, []);
 
   const speedOptions = [1, 10, 60];
 

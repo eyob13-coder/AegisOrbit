@@ -327,25 +327,30 @@ export const ConjunctionRibbons: React.FC = () => {
         </group>
 
         {/* E. Floating 3D HTML HUD Label */}
-        {cameraFocus !== 'GLOBAL' && (
-          <Html position={[0, 0.038, 0]} center>
-            <div className="flex flex-col items-center pointer-events-none select-none font-mono text-[9px] tracking-wider leading-tight">
-              <div className="px-2 py-0.5 rounded-none bg-[#040810]/95 border border-cyan-500/80 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.35)]">
-                <div className="font-bold flex items-center gap-1.5 whitespace-nowrap">
-                  <span className="w-1.5 h-1.5 bg-cyan-400 animate-ping inline-block" />
-                  {selectedConjunction.primary_name}
-                </div>
-                <div className="text-[8px] text-cyan-400/80 flex items-center justify-between gap-2 border-t border-cyan-500/30 mt-0.5 pt-0.5">
-                  <span>VEL: {selectedConjunction.relative_velocity_kms.toFixed(2)} km/s</span>
-                  <span className={Math.abs(deltaV) > 0.01 ? 'text-emerald-400 font-bold' : 'text-amber-400'}>
-                    {Math.abs(deltaV) > 0.01 ? `Δv: ${(deltaV > 0 ? '+' : '') + deltaV.toFixed(2)} m/s` : 'ATTITUDE: NOMINAL'}
-                  </span>
-                </div>
+        <Html
+          position={[0, 0.038, 0]}
+          center
+          style={{
+            display: cameraFocus !== 'GLOBAL' ? 'block' : 'none',
+            pointerEvents: 'none',
+          }}
+        >
+          <div className="flex flex-col items-center pointer-events-none select-none font-mono text-[9px] tracking-wider leading-tight">
+            <div className="px-2 py-0.5 rounded-none bg-[#040810]/95 border border-cyan-500/80 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.35)]">
+              <div className="font-bold flex items-center gap-1.5 whitespace-nowrap">
+                <span className="w-1.5 h-1.5 bg-cyan-400 animate-ping inline-block" />
+                {selectedConjunction?.primary_name}
               </div>
-              <div className="w-px h-2.5 bg-cyan-400/60" />
+              <div className="text-[8px] text-cyan-400/80 flex items-center justify-between gap-2 border-t border-cyan-500/30 mt-0.5 pt-0.5">
+                <span>VEL: {selectedConjunction?.relative_velocity_kms?.toFixed(2)} km/s</span>
+                <span className={Math.abs(deltaV) > 0.01 ? 'text-emerald-400 font-bold' : 'text-amber-400'}>
+                  {Math.abs(deltaV) > 0.01 ? `Δv: ${(deltaV > 0 ? '+' : '') + deltaV.toFixed(2)} m/s` : 'ATTITUDE: NOMINAL'}
+                </span>
+              </div>
             </div>
-          </Html>
-        )}
+            <div className="w-px h-2.5 bg-cyan-400/60" />
+          </div>
+        </Html>
       </group>
 
       {/* =========================================================================
@@ -388,22 +393,27 @@ export const ConjunctionRibbons: React.FC = () => {
         <pointLight color="#ef4444" intensity={1.6} distance={0.35} />
 
         {/* Floating Reticle Label */}
-        {cameraFocus !== 'GLOBAL' && (
-          <Html position={[0, -0.034, 0]} center>
-            <div className="flex flex-col items-center pointer-events-none select-none font-mono text-[9px] tracking-wider leading-tight">
-              <div className="w-px h-2.5 bg-rose-500/70" />
-              <div className="px-2 py-0.5 rounded-none bg-[#0a0406]/95 border border-rose-500/80 text-rose-300 shadow-[0_0_12px_rgba(244,63,94,0.35)]">
-                <div className="font-bold flex items-center gap-1.5 whitespace-nowrap text-rose-400">
-                  <span className="w-1.5 h-1.5 bg-rose-500 animate-pulse inline-block" />
-                  {selectedConjunction.secondary_name}
-                </div>
-                <div className="text-[8px] text-rose-400/80 border-t border-rose-500/30 mt-0.5 pt-0.5">
-                  THREAT: HIGH // UNCONTROLLED TUMBLE
-                </div>
+        <Html
+          position={[0, -0.034, 0]}
+          center
+          style={{
+            display: cameraFocus !== 'GLOBAL' ? 'block' : 'none',
+            pointerEvents: 'none',
+          }}
+        >
+          <div className="flex flex-col items-center pointer-events-none select-none font-mono text-[9px] tracking-wider leading-tight">
+            <div className="w-px h-2.5 bg-rose-500/70" />
+            <div className="px-2 py-0.5 rounded-none bg-[#0a0406]/95 border border-rose-500/80 text-rose-300 shadow-[0_0_12px_rgba(244,63,94,0.35)]">
+              <div className="font-bold flex items-center gap-1.5 whitespace-nowrap text-rose-400">
+                <span className="w-1.5 h-1.5 bg-rose-500 animate-pulse inline-block" />
+                {selectedConjunction?.secondary_name}
+              </div>
+              <div className="text-[8px] text-rose-400/80 border-t border-rose-500/30 mt-0.5 pt-0.5">
+                THREAT: HIGH // UNCONTROLLED TUMBLE
               </div>
             </div>
-          </Html>
-        )}
+          </div>
+        </Html>
       </group>
 
       {/* =========================================================================
@@ -429,37 +439,42 @@ export const ConjunctionRibbons: React.FC = () => {
           opacity={0.6}
           wireframe
         />
-        {cameraFocus === 'CONJUNCTION' && (
-          <Html position={[0, 0.05, 0]} center>
-            <div className="flex flex-col items-center gap-1 pointer-events-none select-none font-mono">
-              {/* Kessler Cascade Alert Banner */}
-              {kesslerDemo && (
-                <div className="px-2.5 py-1 rounded-none bg-[#06080c]/95 border border-[#f43f5e] text-[#f43f5e] text-[10px] font-bold whitespace-nowrap animate-pulse tracking-wider">
-                  ⚠️ CRITICAL KESSLER CASCADE // +400 DEBRIS PARTICLES DETECTED
-                </div>
-              )}
-
-              {/* Safe Separation Achieved Banner */}
-              {isSafeSeparation && !kesslerDemo && Math.abs(deltaV) >= 0.5 && (
-                <div className="px-2.5 py-1 rounded-none bg-[#06080c]/95 border border-emerald-500 text-emerald-300 text-[10px] font-bold whitespace-nowrap tracking-wider">
-                  SEPARATION NOMINAL (+{currentMissDistanceM.toLocaleString(undefined, { maximumFractionDigits: 0 })}m)
-                </div>
-              )}
-
-              {/* Miss distance badge */}
-              <div
-                className="px-2 py-0.5 rounded-none text-[10px] font-bold whitespace-nowrap border tracking-wider tabular-nums"
-                style={{
-                  backgroundColor: '#06080c',
-                  borderColor: warningColor,
-                  color: warningColor,
-                }}
-              >
-                TCA MISS DIST: {currentMissDistanceM.toLocaleString(undefined, { maximumFractionDigits: 0 })} m
+        <Html
+          position={[0, 0.05, 0]}
+          center
+          style={{
+            display: cameraFocus === 'CONJUNCTION' ? 'block' : 'none',
+            pointerEvents: 'none',
+          }}
+        >
+          <div className="flex flex-col items-center gap-1 pointer-events-none select-none font-mono">
+            {/* Kessler Cascade Alert Banner */}
+            {kesslerDemo && (
+              <div className="px-2.5 py-1 rounded-none bg-[#06080c]/95 border border-[#f43f5e] text-[#f43f5e] text-[10px] font-bold whitespace-nowrap animate-pulse tracking-wider">
+                ⚠️ CRITICAL KESSLER CASCADE // +400 DEBRIS PARTICLES DETECTED
               </div>
+            )}
+
+            {/* Safe Separation Achieved Banner */}
+            {isSafeSeparation && !kesslerDemo && Math.abs(deltaV) >= 0.5 && (
+              <div className="px-2.5 py-1 rounded-none bg-[#06080c]/95 border border-emerald-500 text-emerald-300 text-[10px] font-bold whitespace-nowrap tracking-wider">
+                SEPARATION NOMINAL (+{currentMissDistanceM.toLocaleString(undefined, { maximumFractionDigits: 0 })}m)
+              </div>
+            )}
+
+            {/* Miss distance badge */}
+            <div
+              className="px-2 py-0.5 rounded-none text-[10px] font-bold whitespace-nowrap border tracking-wider tabular-nums"
+              style={{
+                backgroundColor: '#06080c',
+                borderColor: warningColor,
+                color: warningColor,
+              }}
+            >
+              TCA MISS DIST: {currentMissDistanceM.toLocaleString(undefined, { maximumFractionDigits: 0 })} m
             </div>
-          </Html>
-        )}
+          </div>
+        </Html>
       </mesh>
 
       {/* Rotating Radar Target Wireframe Ring at TCA */}

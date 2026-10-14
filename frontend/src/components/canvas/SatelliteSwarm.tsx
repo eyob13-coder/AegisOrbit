@@ -12,12 +12,12 @@ export const SatelliteSwarm: React.FC = () => {
   const workerRef = useRef<Worker | null>(null);
   
   const catalog = useOrbitStore((state) => state.catalog);
-  const simTime = useOrbitStore((state) => state.simTime);
-  const advanceSimTime = useOrbitStore((state) => state.advanceSimTime);
   const isSimPaused = useOrbitStore((state) => state.isSimPaused);
   const simSpeed = useOrbitStore((state) => state.simSpeed);
   const kesslerDemo = useOrbitStore((state) => state.kesslerDemo);
 
+  const simTimeRef = useRef<number>(Date.now());
+  const lastSyncRef = useRef<number>(0);
   const isWorkerBusy = useRef(false);
   const latestBufferRef = useRef<Float32Array | null>(null);
   const dummy = useMemo(() => new THREE.Object3D(), []);
@@ -63,9 +63,16 @@ export const SatelliteSwarm: React.FC = () => {
 
   // Per-frame physics sync & Single Draw-Call InstancedMesh update
   useFrame((_, delta) => {
-    // 1. Advance simulation clock
+    // 1. Advance simulation clock in ref without 60 FPS Zustand setState churn
     if (!isSimPaused) {
-      advanceSimTime(delta);
+      simTimeRef.current += delta * 1000 * simSpeed;
+
+      // Throttle store sync to 2Hz (every 500ms) for background consumers
+      const now = performance.now();
+      if (now - lastSyncRef.current > 500) {
+        lastSyncRef.current = now;
+        useOrbitStore.setState({ simTime: simTimeRef.current });
+      }
     }
 
     // 2. Request new physics tick from Web Worker if ready
@@ -74,7 +81,7 @@ export const SatelliteSwarm: React.FC = () => {
       workerRef.current.postMessage({
         type: 'TICK',
         payload: {
-          timestamp: simTime,
+          timestamp: simTimeRef.current,
         },
       });
     }
