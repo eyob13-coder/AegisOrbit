@@ -1,4 +1,8 @@
+import json
+import logging
 import math
+import os
+import time
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional, Tuple
@@ -10,6 +14,102 @@ from sgp4.api import Satrec
 from app.config import settings
 from app.services.celestrak import TLERecord
 from app.services.propagator import PropagatorService, datetime_to_jd_fr, eci_to_threejs
+
+logger = logging.getLogger("aegis.screener")
+
+# Module-level memory cache (Tier 1) for screening results
+_CONJUNCTION_MEMORY_CACHE: Dict[str, Any] = {
+    "conjunctions": None,
+    "timestamp": 0.0,
+    "ttl": settings.CONJUNCTION_CACHE_TTL
+}
+
+def _get_conjunction_cache() -> Optional[List["ConjunctionEvent"]]:
+    now = time.time()
+    # Tier 1: In-memory module cache (< 1ms)
+    if (
+        _CONJUNCTION_MEMORY_CACHE["conjunctions"] is not None
+        and (now - _CONJUNCTION_MEMORY_CACHE["timestamp"]) < settings.CONJUNCTION_CACHE_TTL
+    ):
+        logger.info(f"Loaded {len(_CONJUNCTION_MEMORY_CACHE['conjunctions'])} conjunctions from in-memory cache (Tier 1)")
+        return _CONJUNCTION_MEMORY_CACHE["conjunctions"]
+
+    # Tier 2: Local file cache
+    cache_path = settings.CONJUNCTION_CACHE_PATH
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            cached_time = data.get("timestamp", 0)
+            age = now - cached_time
+            if age < settings.CONJUNCTION_CACHE_TTL:
+                raw_list = data.get("conjunctions", [])
+                events = [ConjunctionEvent(**c) for c in raw_list]
+                _CONJUNCTION_MEMORY_CACHE["conjunctions"] = events
+                _CONJUNCTION_MEMORY_CACHE["timestamp"] = cached_time
+                logger.info(f"Loaded {len(events)} conjunctions from local file cache (Tier 2, age: {int(age)}s)")
+                return events
+        except Exception as e:
+            logger.warning(f"Error reading conjunction file cache: {e}")
+
+    # Tier 3: Optional Redis cache
+    try:
+        import redis
+        client = redis.Redis.from_url(
+            settings.REDIS_URL,
+            decode_responses=True,
+            socket_connect_timeout=0.25,
+            socket_timeout=0.25
+        )
+        raw = client.get("aegisorbit:conjunctions")
+        if raw:
+            raw_list = json.loads(raw)
+            events = [ConjunctionEvent(**c) for c in raw_list]
+            _CONJUNCTION_MEMORY_CACHE["conjunctions"] = events
+            _CONJUNCTION_MEMORY_CACHE["timestamp"] = now
+            logger.info(f"Loaded {len(events)} conjunctions from Redis cache (Tier 3)")
+            return events
+    except Exception:
+        pass
+
+    return None
+
+def _save_conjunction_cache(events: List["ConjunctionEvent"]):
+    now = time.time()
+    _CONJUNCTION_MEMORY_CACHE["conjunctions"] = events
+    _CONJUNCTION_MEMORY_CACHE["timestamp"] = now
+
+    raw_events = [e.model_dump() for e in events]
+
+    # Tier 2: Local file
+    cache_path = settings.CONJUNCTION_CACHE_PATH
+    try:
+        os.makedirs(os.path.dirname(os.path.abspath(cache_path)), exist_ok=True)
+        payload = {
+            "timestamp": now,
+            "ttl_seconds": settings.CONJUNCTION_CACHE_TTL,
+            "count": len(events),
+            "conjunctions": raw_events
+        }
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump(payload, f)
+        logger.info(f"Saved {len(events)} conjunctions to file cache at {cache_path}")
+    except Exception as e:
+        logger.error(f"Failed writing conjunction file cache: {e}")
+
+    # Tier 3: Optional Redis
+    try:
+        import redis
+        client = redis.Redis.from_url(
+            settings.REDIS_URL,
+            decode_responses=True,
+            socket_connect_timeout=0.25,
+            socket_timeout=0.25
+        )
+        client.setex("aegisorbit:conjunctions", settings.CONJUNCTION_CACHE_TTL, json.dumps(raw_events))
+        logger.info("Saved conjunctions to Redis (Tier 3)")
+    except Exception:
+        pass
 
 class ConjunctionEvent(BaseModel):
     conjunction_id: str
@@ -160,13 +260,19 @@ class ScreenerService:
         self,
         horizon_hours: float = 12.0,
         step_minutes: float = 5.0,
-        max_results: int = 15
+        max_results: int = 15,
+        force_refresh: bool = False
     ) -> List[ConjunctionEvent]:
         """
-        High-throughput all-vs-all spatial collision screening engine.
+        High-throughput all-vs-all spatial collision screening engine with 3-tier caching.
         Propagates catalog in vectorized steps, builds SciPy cKDTree, finds close pairs,
         and refines TCA.
         """
+        if not force_refresh:
+            cached = _get_conjunction_cache()
+            if cached and len(cached) > 0:
+                return cached[:max_results]
+
         now = datetime.now(timezone.utc)
         steps_count = int((horizon_hours * 60) / step_minutes) + 1
         dts = [now + timedelta(minutes=i * step_minutes) for i in range(steps_count)]
@@ -255,7 +361,9 @@ class ScreenerService:
             synthetic_event = self._generate_curated_high_risk_scenario(now)
             conjunctions.insert(0, synthetic_event)
 
-        return conjunctions[:max_results]
+        result = conjunctions[:max_results]
+        _save_conjunction_cache(result)
+        return result
 
     def _generate_curated_high_risk_scenario(self, ref_now: datetime) -> ConjunctionEvent:
         """

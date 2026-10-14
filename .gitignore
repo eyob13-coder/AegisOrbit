@@ -23,6 +23,7 @@ ENV/
 # Cache files
 *.cache
 .eslintcache
+*.tsbuildinfo
 aegis_tle_cache.json
 
 # Environment variables

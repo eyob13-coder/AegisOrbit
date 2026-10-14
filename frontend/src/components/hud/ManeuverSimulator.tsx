@@ -11,7 +11,8 @@ import {
   Sliders, 
   RotateCcw,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  Zap
 } from 'lucide-react';
 import { useOrbitStore } from '@/store/useOrbitStore';
 
@@ -24,6 +25,8 @@ export const ManeuverSimulator: React.FC = () => {
   const maneuverResult = useOrbitStore((state) => state.maneuverResult);
   const isSimulatingManeuver = useOrbitStore((state) => state.isSimulatingManeuver);
   const cinemaMode = useOrbitStore((state) => state.cinemaMode);
+  const kesslerDemo = useOrbitStore((state) => state.kesslerDemo);
+  const toggleKesslerDemo = useOrbitStore((state) => state.toggleKesslerDemo);
 
   if (cinemaMode || !selectedConjunction) return null;
 
@@ -250,12 +253,41 @@ export const ManeuverSimulator: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Dynamic Safe Separation Banner */}
+        {Math.abs(deltaV) >= 0.5 && (
+          <div className="p-2 rounded-lg bg-emerald-950/40 border border-emerald-500/50 flex items-center gap-2 text-emerald-300 font-mono text-[10px]">
+            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+            <div className="flex-1">
+              <span className="font-bold">SAFE SEPARATION ACHIEVED</span>
+              <div className="text-[9px] text-emerald-400/80">
+                Miss distance expanded to {newMiss.toLocaleString(undefined, { maximumFractionDigits: 0 })}m. Collision risk resolved.
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Bottom Action */}
-      <div className="mt-auto pt-2">
+      {/* Bottom Actions */}
+      <div className="mt-auto pt-2 space-y-2">
+        {deltaV === 0 && (
+          <button
+            onClick={toggleKesslerDemo}
+            className={`w-full py-1.5 rounded-lg border font-mono text-[11px] flex items-center justify-center gap-1.5 transition-all ${
+              kesslerDemo
+                ? 'bg-red-500/30 border-red-500 text-red-200 animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]'
+                : 'bg-red-950/40 border-red-500/50 hover:bg-red-900/40 text-red-300'
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5 text-red-400" />
+            {kesslerDemo ? 'HALT KESSLER CASCADE' : 'SIMULATE IMPACT / KESSLER BURST'}
+          </button>
+        )}
+
         <button
-          onClick={() => setDeltaV(0.0)}
+          onClick={() => {
+            setDeltaV(0.0);
+          }}
           className="w-full py-1.5 rounded-lg border border-slate-700 bg-slate-900/80 hover:bg-slate-800 text-slate-300 font-mono text-[11px] flex items-center justify-center gap-1.5"
         >
           <RotateCcw className="w-3 h-3" />

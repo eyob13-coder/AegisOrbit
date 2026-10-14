@@ -11,14 +11,19 @@ class Settings(BaseSettings):
     # CelesTrak Configuration
     CELESTRAK_URL: str = "https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle"
     TLE_CACHE_TTL: int = 7200  # Strict 2-hour TTL (7,200 seconds)
+    CONJUNCTION_CACHE_TTL: int = 900  # 15-minute TTL (900 seconds) for conjunction screening
     
     # Redis & File Cache Fallback
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
     
-    # Local fallback file path: handles both POSIX /tmp and Windows temp directories
+    # Local fallback file paths
     TLE_CACHE_PATH: str = os.getenv(
         "TLE_CACHE_PATH", 
-        str(Path(tempfile.gettempdir()) / "aegis_tle_cache.json")
+        str(Path(tempfile.gettempdir()) / "aegisorbit_tle_cache.json")
+    )
+    CONJUNCTION_CACHE_PATH: str = os.getenv(
+        "CONJUNCTION_CACHE_PATH",
+        str(Path(tempfile.gettempdir()) / "aegisorbit_conjunctions_cache.json")
     )
     
     # Astrodynamics & Physical Constants

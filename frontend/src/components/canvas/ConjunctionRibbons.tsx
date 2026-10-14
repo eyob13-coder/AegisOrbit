@@ -5,12 +5,14 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { Line, Html } from '@react-three/drei';
 import { useOrbitStore } from '@/store/useOrbitStore';
+import { DebrisBurst } from './DebrisBurst';
 
 export const ConjunctionRibbons: React.FC = () => {
   const selectedConjunction = useOrbitStore((state) => state.selectedConjunction);
   const maneuverResult = useOrbitStore((state) => state.maneuverResult);
   const deltaV = useOrbitStore((state) => state.deltaV);
   const cameraFocus = useOrbitStore((state) => state.cameraFocus);
+  const kesslerDemo = useOrbitStore((state) => state.kesslerDemo);
 
   const sphereWarningRef = useRef<THREE.Mesh>(null);
 
@@ -52,7 +54,7 @@ export const ConjunctionRibbons: React.FC = () => {
     return new THREE.Vector3(p[0], p[1], p[2]);
   }, [selectedConjunction]);
 
-  // Midpoint for camera lookAt
+  // Midpoint for camera lookAt and collision point
   const conjunctionMidpoint = useMemo(() => {
     return new THREE.Vector3()
       .addVectors(primaryTcaPos, secondaryTcaPos)
@@ -61,16 +63,19 @@ export const ConjunctionRibbons: React.FC = () => {
 
   // Current effective miss distance in meters
   const currentMissDistanceM = maneuverResult ? maneuverResult.new_miss_distance_m : (selectedConjunction ? selectedConjunction.miss_distance_m : 0);
+  const isSafeSeparation = Math.abs(deltaV) >= 0.5 || currentMissDistanceM >= 5000;
 
-  // Dynamic color for warning sphere: Red (< 1km) -> Amber (1-5km) -> Green (> 5km)
+  // Dynamic color for warning sphere: Red (< 1km) -> Amber (1-5km) -> Green (> 5km / deltaV >= 0.5)
   const warningColor = useMemo(() => {
-    if (currentMissDistanceM < 1000) {
+    if (isSafeSeparation) {
+      return '#10b981'; // Safe Emerald
+    } else if (currentMissDistanceM < 1000) {
       return '#ef4444'; // Critical Crimson
     } else if (currentMissDistanceM < 5000) {
       return '#f59e0b'; // Warning Amber
     }
-    return '#10b981'; // Safe Emerald
-  }, [currentMissDistanceM]);
+    return '#10b981';
+  }, [currentMissDistanceM, isSafeSeparation]);
 
   // Pulse warning sphere
   useFrame((state) => {
@@ -156,20 +161,41 @@ export const ConjunctionRibbons: React.FC = () => {
           wireframe
         />
         {cameraFocus === 'CONJUNCTION' && (
-          <Html position={[0, 0.04, 0]} center>
-            <div
-              className="px-2 py-0.5 rounded text-[10px] font-mono font-bold whitespace-nowrap border pointer-events-none select-none shadow-xl tracking-wider"
-              style={{
-                backgroundColor: 'rgba(5, 8, 17, 0.94)',
-                borderColor: warningColor,
-                color: warningColor,
-              }}
-            >
-              TCA MISS: {currentMissDistanceM.toLocaleString(undefined, { maximumFractionDigits: 0 })} m
+          <Html position={[0, 0.045, 0]} center>
+            <div className="flex flex-col items-center gap-1 pointer-events-none select-none">
+              {/* Kessler Cascade Alert Banner */}
+              {kesslerDemo && (
+                <div className="px-3 py-1 rounded bg-red-950/95 border border-red-500 text-red-200 text-[10px] font-mono font-bold whitespace-nowrap animate-pulse shadow-[0_0_20px_rgba(239,68,68,0.7)] tracking-wider">
+                  ⚠️ CRITICAL KESSLER CASCADE DETECTED — +400 DEBRIS FRAGMENTS GENERATED
+                </div>
+              )}
+
+              {/* Safe Separation Achieved Banner */}
+              {isSafeSeparation && !kesslerDemo && Math.abs(deltaV) >= 0.5 && (
+                <div className="px-3 py-1 rounded bg-emerald-950/95 border border-emerald-500 text-emerald-300 text-[10px] font-mono font-bold whitespace-nowrap shadow-[0_0_15px_rgba(16,185,129,0.5)] tracking-wider">
+                  🛡️ SAFE SEPARATION ACHIEVED (+{currentMissDistanceM.toLocaleString(undefined, { maximumFractionDigits: 0 })} m)
+                </div>
+              )}
+
+              {/* Miss distance badge */}
+              <div
+                className="px-2 py-0.5 rounded text-[10px] font-mono font-bold whitespace-nowrap border shadow-xl tracking-wider"
+                style={{
+                  backgroundColor: 'rgba(5, 8, 17, 0.94)',
+                  borderColor: warningColor,
+                  color: warningColor,
+                }}
+              >
+                TCA MISS: {currentMissDistanceM.toLocaleString(undefined, { maximumFractionDigits: 0 })} m
+              </div>
             </div>
           </Html>
         )}
       </mesh>
+
+      {/* 7. Interactive Kessler Cascade Debris Burst (400 Fragments) */}
+      <DebrisBurst origin={conjunctionMidpoint} active={kesslerDemo} />
     </group>
   );
 };
+

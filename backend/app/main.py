@@ -31,14 +31,23 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Enable CORS for local Next.js frontend (port 3000) and remote deployments
+# Enable CORS for local Next.js frontend (port 3000), Vercel previews, and remote deployments
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+from app.api.routes import api_router, refresh_catalog_and_screen, _state
+
+@app.get("/health")
+def root_health():
+    return {
+        "status": "nominal",
+        "cached_objects": len(_state.get("tles", []))
+    }
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 

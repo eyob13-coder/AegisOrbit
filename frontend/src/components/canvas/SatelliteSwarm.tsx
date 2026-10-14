@@ -26,7 +26,9 @@ export const SatelliteSwarm: React.FC = () => {
   useEffect(() => {
     let worker: Worker | null = null;
     try {
-      worker = new Worker(new URL('../../workers/orbital.worker.ts', import.meta.url));
+      worker = new Worker(new URL('../../workers/orbital.worker.ts', import.meta.url), {
+        type: 'module',
+      });
       workerRef.current = worker;
 
       worker.onmessage = (e: MessageEvent) => {
@@ -80,7 +82,7 @@ export const SatelliteSwarm: React.FC = () => {
     // 3. Update InstancedMesh matrices from the latest transferable buffer
     const buffer = latestBufferRef.current;
     const mesh = instancedMeshRef.current;
-    if (mesh && buffer) {
+    if (mesh && buffer && buffer.length > 0) {
       const count = Math.min(buffer.length / 3, MAX_SATELLITE_COUNT);
       const baseScale = kesslerDemo ? 0.012 : 0.007;
 

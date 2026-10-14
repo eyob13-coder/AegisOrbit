@@ -2,6 +2,7 @@ import logging
 import time
 from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field
 
 from app.config import settings
@@ -45,17 +46,22 @@ class B2BEphemerisScreenResponse(BaseModel):
 
 
 async def refresh_catalog_and_screen(force_refresh: bool = False):
-    """Refreshes active TLEs and runs all-vs-all spatial screening."""
+    """Refreshes active TLEs and runs all-vs-all spatial screening off the main thread."""
     if _state["is_screening"]:
         return
     _state["is_screening"] = True
     try:
         tles = await celestrak_service.get_active_tles(force_refresh=force_refresh)
         _state["tles"] = tles
-        propagator = PropagatorService(tles)
+
+        def _compute_screening():
+            prop = PropagatorService(tles)
+            scr = ScreenerService(prop)
+            cnjs = scr.screen_catalog(horizon_hours=12.0, step_minutes=10.0, max_results=15, force_refresh=force_refresh)
+            return prop, cnjs
+
+        propagator, conjunctions = await run_in_threadpool(_compute_screening)
         _state["propagator"] = propagator
-        screener = ScreenerService(propagator)
-        conjunctions = screener.screen_catalog(horizon_hours=12.0, step_minutes=10.0, max_results=15)
         _state["conjunctions"] = conjunctions
         _state["last_screened_timestamp"] = time.time()
         logger.info(f"Screening complete: {len(conjunctions)} high-risk conjunctions detected across {len(tles)} objects")
@@ -68,10 +74,10 @@ async def refresh_catalog_and_screen(force_refresh: bool = False):
 @api_router.get("/health")
 async def health_check():
     return {
-        "status": "healthy",
+        "status": "nominal",
+        "cached_objects": len(_state["tles"]),
         "engine": "AegisOrbit Astrodynamics Engine",
         "version": settings.VERSION,
-        "catalog_size": len(_state["tles"]),
         "active_conjunctions": len(_state["conjunctions"]),
         "last_screened_seconds_ago": round(time.time() - _state["last_screened_timestamp"], 1) if _state["last_screened_timestamp"] > 0 else None
     }
@@ -121,7 +127,7 @@ async def simulate_maneuver(request: ManeuverRequest):
     r"""
     Simulates along-track impulsive thruster burn ($\Delta v_T$) executed prior to TCA.
     Computes Clohessy-Wiltshire trajectory separation, new miss distance,
-    Tsiolkovsky fuel mass consumed, and updated 3D orbital ribbon coordinates.
+    Tsiolkovsky fuel mass consumed, and updated 3D orbital ribbon coordinates off the main thread.
     """
     # Find matching conjunction event
     event = next((c for c in _state["conjunctions"] if c.conjunction_id == request.conjunction_id), None)
@@ -137,7 +143,8 @@ async def simulate_maneuver(request: ManeuverRequest):
         else:
             raise HTTPException(status_code=404, detail="No active conjunction event available to maneuver")
 
-    result = maneuver_service.solve_evasion_maneuver(
+    result = await run_in_threadpool(
+        maneuver_service.solve_evasion_maneuver,
         primary_pos_eci=event.primary_position_eci,
         secondary_pos_eci=event.secondary_position_eci,
         original_miss_distance_m=event.miss_distance_m,
@@ -172,16 +179,20 @@ async def screen_ephemeris(payload: B2BEphemerisScreenRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid TLE format: {e}")
 
-    # Combine custom satellite with catalog
+    # Combine custom satellite with catalog and run in threadpool
     combined_tles = [custom_tle] + _state["tles"]
-    temp_propagator = PropagatorService(combined_tles)
-    temp_screener = ScreenerService(temp_propagator)
 
-    all_conjunctions = temp_screener.screen_catalog(
-        horizon_hours=payload.screening_horizon_hours,
-        step_minutes=10.0,
-        max_results=20
-    )
+    def _run_b2b_screening():
+        temp_propagator = PropagatorService(combined_tles)
+        temp_screener = ScreenerService(temp_propagator)
+        return temp_screener.screen_catalog(
+            horizon_hours=payload.screening_horizon_hours,
+            step_minutes=10.0,
+            max_results=20,
+            force_refresh=True
+        )
+
+    all_conjunctions = await run_in_threadpool(_run_b2b_screening)
 
     # Filter conjunctions involving the custom target satellite
     target_conjunctions = [

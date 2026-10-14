@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: aegisorbit-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
+      - key: REDIS_URL
+        value: ""
+      - key: SCREENING_TIMESTEP_SECONDS
+        value: "60"
+      - key: SCREENING_WINDOW_HOURS
+        value: "24"
+      - key: SCREENING_THRESHOLD_KM
+        value: "5.0"

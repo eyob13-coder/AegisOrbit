@@ -214,6 +214,13 @@ def parse_tle_text(text: str) -> List[TLERecord]:
     return records
 
 
+# Module-level memory cache (Tier 1)
+_TLE_MEMORY_CACHE: Dict[str, Any] = {
+    "records": None,
+    "timestamp": 0.0,
+    "ttl": settings.TLE_CACHE_TTL
+}
+
 class CelesTrakService:
     def __init__(self):
         self._redis_client = None
@@ -225,68 +232,73 @@ class CelesTrakService:
             self._redis_client = redis.Redis.from_url(
                 settings.REDIS_URL,
                 decode_responses=True,
-                socket_connect_timeout=1.0,
-                socket_timeout=1.0
+                socket_connect_timeout=0.25,
+                socket_timeout=0.25
             )
             self._redis_client.ping()
             logger.info("Connected to Redis for TLE caching")
         except Exception as e:
-            logger.info(f"Redis not available ({e}); using local file fallback: {settings.TLE_CACHE_PATH}")
+            logger.info(f"Redis not running ({e}); using 2-tier local memory & file cache fallback")
             self._redis_client = None
 
     def _get_from_cache(self) -> Optional[List[TLERecord]]:
-        # 1. Try Redis first
-        if self._redis_client:
-            try:
-                data = self._redis_client.get("celestrak:active_tles")
-                if data:
-                    records_raw = json.loads(data)
-                    logger.info(f"Loaded {len(records_raw)} TLEs from Redis cache")
-                    return [TLERecord(**r) for r in records_raw]
-            except Exception as e:
-                logger.warning(f"Failed reading from Redis cache: {e}")
+        # Tier 1: In-memory module cache (0ms instant response)
+        now = time.time()
+        if (
+            _TLE_MEMORY_CACHE["records"] is not None
+            and (now - _TLE_MEMORY_CACHE["timestamp"]) < settings.TLE_CACHE_TTL
+        ):
+            logger.info(f"Loaded {len(_TLE_MEMORY_CACHE['records'])} TLEs from in-memory cache (Tier 1)")
+            return _TLE_MEMORY_CACHE["records"]
 
-        # 2. Try Local File fallback
+        # Tier 2: Local file cache
         cache_path = settings.TLE_CACHE_PATH
         if os.path.exists(cache_path):
             try:
                 with open(cache_path, "r", encoding="utf-8") as f:
                     cache_obj = json.load(f)
                 cached_time = cache_obj.get("timestamp", 0)
-                age = time.time() - cached_time
+                age = now - cached_time
                 if age < settings.TLE_CACHE_TTL:
                     records_raw = cache_obj.get("records", [])
-                    logger.info(f"Loaded {len(records_raw)} TLEs from local file cache (age: {int(age)}s / TTL: {settings.TLE_CACHE_TTL}s)")
-                    return [TLERecord(**r) for r in records_raw]
-                else:
-                    logger.info(f"Local file cache expired (age: {int(age)}s > {settings.TLE_CACHE_TTL}s)")
+                    records = [TLERecord(**r) for r in records_raw]
+                    # Backfill memory cache
+                    _TLE_MEMORY_CACHE["records"] = records
+                    _TLE_MEMORY_CACHE["timestamp"] = cached_time
+                    logger.info(f"Loaded {len(records)} TLEs from local file cache (Tier 2, age: {int(age)}s)")
+                    return records
             except Exception as e:
                 logger.warning(f"Error reading local file cache: {e}")
+
+        # Tier 3: Optional Redis cache
+        if self._redis_client:
+            try:
+                data = self._redis_client.get("celestrak:active_tles")
+                if data:
+                    records_raw = json.loads(data)
+                    records = [TLERecord(**r) for r in records_raw]
+                    _TLE_MEMORY_CACHE["records"] = records
+                    _TLE_MEMORY_CACHE["timestamp"] = now
+                    logger.info(f"Loaded {len(records)} TLEs from Redis cache (Tier 3)")
+                    return records
+            except Exception as e:
+                logger.warning(f"Optional Redis cache skipped: {e}")
 
         return None
 
     def _save_to_cache(self, records: List[TLERecord]):
+        now = time.time()
+        # 1. Save to in-memory cache (Tier 1)
+        _TLE_MEMORY_CACHE["records"] = records
+        _TLE_MEMORY_CACHE["timestamp"] = now
+
+        # 2. Save to local file (Tier 2)
         records_dict = [r.model_dump() for r in records]
-        serialized = json.dumps(records_dict)
-
-        # 1. Save to Redis
-        if self._redis_client:
-            try:
-                self._redis_client.setex(
-                    "celestrak:active_tles",
-                    settings.TLE_CACHE_TTL,
-                    serialized
-                )
-                logger.info("Saved TLE catalog to Redis with 2-hour TTL")
-            except Exception as e:
-                logger.warning(f"Failed saving to Redis: {e}")
-
-        # 2. Save to Local File Fallback
         cache_path = settings.TLE_CACHE_PATH
         try:
             os.makedirs(os.path.dirname(os.path.abspath(cache_path)), exist_ok=True)
             cache_obj = {
-                "timestamp": time.time(),
+                "timestamp": now,
                 "ttl_seconds": settings.TLE_CACHE_TTL,
                 "count": len(records),
                 "records": records_dict
@@ -296,6 +308,19 @@ class CelesTrakService:
             logger.info(f"Saved {len(records)} TLEs to local file cache at {cache_path}")
         except Exception as e:
             logger.error(f"Failed writing local file cache: {e}")
+
+        # 3. Optional Redis (Tier 3)
+        if self._redis_client:
+            try:
+                serialized = json.dumps(records_dict)
+                self._redis_client.setex(
+                    "celestrak:active_tles",
+                    settings.TLE_CACHE_TTL,
+                    serialized
+                )
+                logger.info("Saved TLE catalog to Redis (Tier 3)")
+            except Exception as e:
+                logger.warning(f"Optional Redis cache save skipped: {e}")
 
     async def get_active_tles(self, force_refresh: bool = False) -> List[TLERecord]:
         """
