@@ -141,7 +141,9 @@ export const ConjunctionList: React.FC = () => {
                 <div className="grid grid-cols-4 gap-1 pl-1 pt-1 border-t border-white/[0.04] text-[10px] tabular-nums">
                   <div>
                     <span className="text-slate-500 block text-[8px] uppercase tracking-wider">TCA UTC</span>
-                    <span className="text-slate-300 font-medium">{tcaTimeStr}</span>
+                    <span className="text-slate-300 font-medium" suppressHydrationWarning>
+                      {tcaTimeStr}
+                    </span>
                   </div>
                   <div>
                     <span className="text-slate-500 block text-[8px] uppercase tracking-wider">MISS DIST</span>

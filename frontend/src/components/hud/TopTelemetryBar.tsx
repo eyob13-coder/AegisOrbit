@@ -74,7 +74,9 @@ export const TopTelemetryBar: React.FC = () => {
       <div className="flex items-center gap-2">
         <div className="hidden lg:flex items-center px-2 py-0.5 bg-[#0b0f17] border border-white/[0.08] text-slate-300 font-mono text-[10px] tabular-nums">
           <span className="text-slate-500 mr-1.5">EPOCH:</span>
-          <span className="text-white font-medium">{utcClock || '2026-10-14 13:30:14.82 UTC'}</span>
+          <span className="text-white font-medium" suppressHydrationWarning>
+            {utcClock || '2026-10-14 13:30:14.82 UTC'}
+          </span>
         </div>
 
         {/* Warp Switches */}
