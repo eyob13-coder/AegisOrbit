@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ease-emil-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-emil-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #03050a;
+  color: #e2e8f0;
+  font-family: 'Outfit', sans-serif;
+  overflow: hidden;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Monospace telemetry numbers */
+.font-mono-telemetry {
+  font-family: 'JetBrains Mono', monospace;
+  font-feature-settings: 'tnum' on, 'zero' on;
+}
+
+/* Emil Kowalski Button & Pressable Feedback */
+button, .pressable {
+  transition: transform 160ms var(--ease-emil-out), background-color 160ms ease, border-color 160ms ease;
+}
+
+button:active, .pressable:active {
+  transform: scale(0.97);
+}
+
+/* Glassmorphism panels */
+.glass-panel {
+  background: rgba(5, 8, 17, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(6, 182, 212, 0.18);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+}
+
+.glass-panel-subtle {
+  background: rgba(8, 13, 28, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+/* Glowing accent borders */
+.glow-cyan {
+  box-shadow: 0 0 20px -3px rgba(6, 182, 212, 0.3);
+}
+
+.glow-crimson {
+  box-shadow: 0 0 20px -3px rgba(239, 68, 68, 0.4);
+}
+
+/* Custom scrollbar for HUD panels */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(5, 8, 17, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(6, 182, 212, 0.3);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(6, 182, 212, 0.6);
+}
