@@ -110,7 +110,7 @@ export const TopTelemetryBar: React.FC = () => {
 
       {/* Right Cluster: Camera Modes, Kessler Trigger, B2B API & Cinema Mode */}
       <div className="flex items-center gap-1.5">
-        {/* Camera Mode Hardware Switch */}
+        {/* Camera Mode Hardware Switch: GLOBAL | TCA-LOCK | SAT-CHASE */}
         <div className="flex items-center border border-white/[0.08] bg-[#0b0f17]">
           <button
             onClick={() => setCameraFocus('GLOBAL')}
@@ -119,18 +119,31 @@ export const TopTelemetryBar: React.FC = () => {
                 ? 'bg-sky-500 text-slate-950 font-bold'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
             }`}
+            title="Global Swarm View"
           >
             GLOBAL
           </button>
           <button
             onClick={() => setCameraFocus('CONJUNCTION')}
-            className={`h-6 px-2 text-[10px] font-mono uppercase tracking-wider transition-colors ${
+            className={`h-6 px-2 text-[10px] font-mono uppercase tracking-wider border-r border-white/[0.08] transition-colors ${
               cameraFocus === 'CONJUNCTION'
                 ? 'bg-sky-500 text-slate-950 font-bold'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
             }`}
+            title="TCA Intersection Framing"
           >
             TCA-LOCK
+          </button>
+          <button
+            onClick={() => setCameraFocus('SAT_CHASE')}
+            className={`h-6 px-2 text-[10px] font-mono uppercase tracking-wider transition-colors ${
+              cameraFocus === 'SAT_CHASE'
+                ? 'bg-sky-500 text-slate-950 font-bold'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+            }`}
+            title="Follow Primary Satellite in Flight"
+          >
+            SAT-CHASE
           </button>
         </div>
 

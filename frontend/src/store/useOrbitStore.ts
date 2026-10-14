@@ -76,7 +76,8 @@ interface OrbitState {
   simSpeed: number;
   isSimPaused: boolean;
   simTime: number; // Unix timestamp in ms
-  cameraFocus: 'GLOBAL' | 'CONJUNCTION';
+  cameraFocus: 'GLOBAL' | 'CONJUNCTION' | 'SAT_CHASE';
+  liveSatPosition: [number, number, number] | null;
 
   // HUD & Recording Options
   cinemaMode: boolean;
@@ -93,7 +94,8 @@ interface OrbitState {
   setSimSpeed: (speed: number) => void;
   toggleSimPause: () => void;
   advanceSimTime: (deltaSeconds: number) => void;
-  setCameraFocus: (focus: 'GLOBAL' | 'CONJUNCTION') => void;
+  setCameraFocus: (focus: 'GLOBAL' | 'CONJUNCTION' | 'SAT_CHASE') => void;
+  setLiveSatPosition: (pos: [number, number, number]) => void;
   toggleCinemaMode: () => void;
   toggleKesslerDemo: () => void;
   setApiModalOpen: (open: boolean) => void;
@@ -139,7 +141,8 @@ export const useOrbitStore = create<OrbitState>((set, get) => ({
   simSpeed: 1,
   isSimPaused: false,
   simTime: Date.now(),
-  cameraFocus: 'GLOBAL',
+  cameraFocus: 'CONJUNCTION',
+  liveSatPosition: initialConjunction.primary_position_scene,
 
   cinemaMode: false,
   kesslerDemo: false,
@@ -340,7 +343,8 @@ export const useOrbitStore = create<OrbitState>((set, get) => ({
       simTime: state.isSimPaused ? state.simTime : state.simTime + deltaSeconds * 1000 * state.simSpeed,
     })),
 
-  setCameraFocus: (focus: 'GLOBAL' | 'CONJUNCTION') => set({ cameraFocus: focus }),
+  setCameraFocus: (focus: 'GLOBAL' | 'CONJUNCTION' | 'SAT_CHASE') => set({ cameraFocus: focus }),
+  setLiveSatPosition: (pos: [number, number, number]) => set({ liveSatPosition: pos }),
   toggleCinemaMode: () => set((state) => ({ cinemaMode: !state.cinemaMode })),
   toggleKesslerDemo: () => set((state) => ({ kesslerDemo: !state.kesslerDemo })),
   setApiModalOpen: (open: boolean) => set({ isApiModalOpen: open }),

@@ -6,6 +6,7 @@ import { useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { useOrbitStore } from '@/store/useOrbitStore';
+import { liveHeroSatPosition } from './liveOrbitState';
 
 export const CameraController: React.FC = () => {
   const { camera } = useThree();
@@ -45,7 +46,10 @@ export const CameraController: React.FC = () => {
     if (!controlsRef.current) return;
     const controls = controlsRef.current;
 
-    if (isUserDragging.current || !isTransitioning.current) {
+    if (isUserDragging.current) {
+      return;
+    }
+    if (!isTransitioning.current && cameraFocus !== 'SAT_CHASE') {
       return;
     }
 
@@ -84,6 +88,19 @@ export const CameraController: React.FC = () => {
         camera.position.copy(targetCamPos);
         controls.target.copy(conjunctionMidpoint);
         isTransitioning.current = false;
+      }
+    } else if (cameraFocus === 'SAT_CHASE') {
+      if (liveHeroSatPosition.lengthSq() > 0.001) {
+        const satPos = liveHeroSatPosition;
+        const radialDir = satPos.clone().normalize();
+        const chaseCamPos = satPos
+          .clone()
+          .add(radialDir.clone().multiplyScalar(0.20))
+          .add(new THREE.Vector3(0.05, 0.08, 0.08));
+
+        camera.position.lerp(chaseCamPos, delta * 4.5);
+        controls.target.lerp(satPos, delta * 4.5);
+        controls.update();
       }
     }
   });
