@@ -117,11 +117,14 @@ export const ConjunctionRibbons: React.FC = () => {
       {/* 3. Primary Satellite Marker Sphere at TCA */}
       <mesh position={primaryTcaPos}>
         <sphereGeometry args={[0.012, 16, 16]} />
-        <meshBasicMaterial color="#22d3ee" toneMapped={false} />
+        <meshBasicMaterial color="#38bdf8" toneMapped={false} />
         {cameraFocus === 'CONJUNCTION' && (
-          <Html position={[0, 0.025, 0]} center>
-            <div className="px-2 py-0.5 rounded text-[10px] font-mono whitespace-nowrap bg-slate-950/90 border border-cyan-500/60 text-cyan-300 pointer-events-none select-none shadow-lg tracking-wider">
-              {selectedConjunction.primary_name}
+          <Html position={[0, 0.035, 0]} center>
+            <div className="flex flex-col items-center pointer-events-none select-none">
+              <div className="px-2 py-0.5 rounded-none text-[10px] font-mono whitespace-nowrap bg-[#06080c]/95 border border-sky-400/50 text-sky-300 tracking-wider">
+                TARGET-01 // {selectedConjunction.primary_name}
+              </div>
+              <div className="w-px h-2.5 bg-sky-400/60" />
             </div>
           </Html>
         )}
@@ -130,11 +133,14 @@ export const ConjunctionRibbons: React.FC = () => {
       {/* 4. Secondary Debris Marker Sphere at TCA */}
       <mesh position={secondaryTcaPos}>
         <sphereGeometry args={[0.012, 16, 16]} />
-        <meshBasicMaterial color="#ef4444" toneMapped={false} />
+        <meshBasicMaterial color="#f43f5e" toneMapped={false} />
         {cameraFocus === 'CONJUNCTION' && (
-          <Html position={[0, -0.025, 0]} center>
-            <div className="px-2 py-0.5 rounded text-[10px] font-mono whitespace-nowrap bg-slate-950/90 border border-red-500/60 text-red-300 pointer-events-none select-none shadow-lg tracking-wider">
-              {selectedConjunction.secondary_name}
+          <Html position={[0, -0.035, 0]} center>
+            <div className="flex flex-col items-center pointer-events-none select-none">
+              <div className="w-px h-2.5 bg-[#f43f5e]/60" />
+              <div className="px-2 py-0.5 rounded-none text-[10px] font-mono whitespace-nowrap bg-[#06080c]/95 border border-[#f43f5e]/60 text-[#f43f5e] tracking-wider">
+                THREAT-01 // {selectedConjunction.secondary_name}
+              </div>
             </div>
           </Html>
         )}
@@ -161,32 +167,32 @@ export const ConjunctionRibbons: React.FC = () => {
           wireframe
         />
         {cameraFocus === 'CONJUNCTION' && (
-          <Html position={[0, 0.045, 0]} center>
-            <div className="flex flex-col items-center gap-1 pointer-events-none select-none">
+          <Html position={[0, 0.05, 0]} center>
+            <div className="flex flex-col items-center gap-1 pointer-events-none select-none font-mono">
               {/* Kessler Cascade Alert Banner */}
               {kesslerDemo && (
-                <div className="px-3 py-1 rounded bg-red-950/95 border border-red-500 text-red-200 text-[10px] font-mono font-bold whitespace-nowrap animate-pulse shadow-[0_0_20px_rgba(239,68,68,0.7)] tracking-wider">
-                  ⚠️ CRITICAL KESSLER CASCADE DETECTED — +400 DEBRIS FRAGMENTS GENERATED
+                <div className="px-2.5 py-1 rounded-none bg-[#06080c]/95 border border-[#f43f5e] text-[#f43f5e] text-[10px] font-bold whitespace-nowrap animate-pulse tracking-wider">
+                  ⚠️ CRITICAL KESSLER CASCADE // +400 DEBRIS PARTICLES DETECTED
                 </div>
               )}
 
               {/* Safe Separation Achieved Banner */}
               {isSafeSeparation && !kesslerDemo && Math.abs(deltaV) >= 0.5 && (
-                <div className="px-3 py-1 rounded bg-emerald-950/95 border border-emerald-500 text-emerald-300 text-[10px] font-mono font-bold whitespace-nowrap shadow-[0_0_15px_rgba(16,185,129,0.5)] tracking-wider">
-                  🛡️ SAFE SEPARATION ACHIEVED (+{currentMissDistanceM.toLocaleString(undefined, { maximumFractionDigits: 0 })} m)
+                <div className="px-2.5 py-1 rounded-none bg-[#06080c]/95 border border-emerald-500 text-emerald-300 text-[10px] font-bold whitespace-nowrap tracking-wider">
+                  SEPARATION NOMINAL (+{currentMissDistanceM.toLocaleString(undefined, { maximumFractionDigits: 0 })}m)
                 </div>
               )}
 
               {/* Miss distance badge */}
               <div
-                className="px-2 py-0.5 rounded text-[10px] font-mono font-bold whitespace-nowrap border shadow-xl tracking-wider"
+                className="px-2 py-0.5 rounded-none text-[10px] font-bold whitespace-nowrap border tracking-wider tabular-nums"
                 style={{
-                  backgroundColor: 'rgba(5, 8, 17, 0.94)',
+                  backgroundColor: '#06080c',
                   borderColor: warningColor,
                   color: warningColor,
                 }}
               >
-                TCA MISS: {currentMissDistanceM.toLocaleString(undefined, { maximumFractionDigits: 0 })} m
+                TCA MISS DIST: {currentMissDistanceM.toLocaleString(undefined, { maximumFractionDigits: 0 })} m
               </div>
             </div>
           </Html>

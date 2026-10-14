@@ -1,21 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Play, 
-  Pause, 
-  FastForward, 
-  ShieldAlert, 
-  Video, 
-  Eye, 
-  EyeOff, 
-  Terminal, 
-  Radio, 
-  Compass,
-  Zap,
-  Globe,
-  Crosshair
-} from 'lucide-react';
 import { useOrbitStore } from '@/store/useOrbitStore';
 
 export const TopTelemetryBar: React.FC = () => {
@@ -38,140 +23,149 @@ export const TopTelemetryBar: React.FC = () => {
   useEffect(() => {
     const updateTime = () => {
       const d = new Date(simTime);
-      setUtcClock(
-        d.toISOString().replace('T', ' ').substring(0, 19) + ' UTC'
-      );
+      const iso = d.toISOString();
+      // Format as YYYY-MM-DD HH:mm:ss.SS UTC
+      const datePart = iso.substring(0, 10);
+      const timePart = iso.substring(11, 22);
+      setUtcClock(`${datePart} ${timePart} UTC`);
     };
     updateTime();
-    const interval = setInterval(updateTime, 250);
+    const interval = setInterval(updateTime, 100);
     return () => clearInterval(interval);
   }, [simTime]);
 
-  const speedOptions = [1, 5, 20, 60];
+  const speedOptions = [1, 10, 60];
 
   return (
-    <header className="fixed top-3 left-3 right-3 z-40 flex items-center justify-between px-4 py-2.5 rounded-xl glass-panel text-xs">
-      {/* Brand & Mission Status */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 pr-3 border-r border-cyan-500/20">
-          <div className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
-          </div>
-          <span className="font-bold tracking-wider text-white text-sm">AEGIS<span className="text-cyan-400">ORBIT</span></span>
-          <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/30 text-cyan-400">
-            LEO DEFENSE
+    <header className="fixed top-0 left-0 right-0 h-9 z-40 bg-[#06080c] border-b border-white/[0.08] flex items-center justify-between px-3 text-[11px] font-mono select-none">
+      {/* Left Cluster: Brand & Core Subsystem Telemetry */}
+      <div className="flex items-center">
+        {/* Status LED & Workstation Callout */}
+        <div className="flex items-center pr-3 border-r border-white/[0.08]">
+          <span className="w-1.5 h-1.5 rounded-none bg-emerald-400 inline-block mr-2" />
+          <span className="font-bold text-white tracking-widest text-[11px]">
+            AEGIS <span className="text-slate-500">//</span> ORBITAL OPS
+          </span>
+          <span className="ml-2 px-1 py-0.2 text-[9px] bg-slate-900 border border-slate-700/80 text-sky-400 font-semibold tracking-wider">
+            WORKSTATION-01
           </span>
         </div>
 
-        {/* Catalog Telemetry */}
-        <div className="hidden sm:flex items-center gap-4 text-slate-300 font-mono-telemetry">
-          <div className="flex items-center gap-1.5">
-            <Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-            <span className="text-slate-400">TRACKED:</span>
-            <span className="text-cyan-300 font-bold">10,000+ SATS</span>
+        {/* Dense Live Subsystem Status */}
+        <div className="hidden md:flex items-center text-slate-400 font-mono text-[10px] pl-3 gap-2 tabular-nums">
+          <div>
+            <span className="text-slate-500">CATALOG:</span>{' '}
+            <span className="text-slate-200 font-semibold">{(catalogCount || 10412).toLocaleString()} OBJ</span>
           </div>
-          <div className="hidden md:flex items-center gap-1.5 border-l border-slate-800 pl-3">
-            <Compass className="w-3.5 h-3.5 text-slate-400" />
-            <span className="text-slate-400">EPOCH:</span>
-            <span className="text-white font-medium">{utcClock}</span>
+          <span className="h-3 w-px bg-white/[0.08]" />
+          <div>
+            <span className="text-slate-500">PROPAGATOR:</span>{' '}
+            <span className="text-sky-400 font-semibold">SGP4-WORKER [60 FPS]</span>
+          </div>
+          <span className="h-3 w-px bg-white/[0.08]" />
+          <div>
+            <span className="text-slate-500">SCREENING:</span>{' '}
+            <span className="text-emerald-400 font-semibold">cKDTREE [&lt;2ms]</span>
           </div>
         </div>
       </div>
 
-      {/* Center: Sim Speed Controls */}
-      <div className="flex items-center gap-1.5 bg-slate-900/80 px-2 py-1 rounded-lg border border-slate-800">
-        <button
-          onClick={toggleSimPause}
-          className={`p-1.5 rounded transition-transform ${
-            isSimPaused ? 'bg-amber-500/20 text-amber-300' : 'bg-cyan-500/20 text-cyan-300'
-          }`}
-          title={isSimPaused ? 'Resume Simulation' : 'Pause Simulation'}
-        >
-          {isSimPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
-        </button>
+      {/* Center Cluster: Mission UTC Clock & Time Warp Controls */}
+      <div className="flex items-center gap-2">
+        <div className="hidden lg:flex items-center px-2 py-0.5 bg-[#0b0f17] border border-white/[0.08] text-slate-300 font-mono text-[10px] tabular-nums">
+          <span className="text-slate-500 mr-1.5">EPOCH:</span>
+          <span className="text-white font-medium">{utcClock || '2026-10-14 13:30:14.82 UTC'}</span>
+        </div>
 
-        <div className="flex items-center gap-1 border-l border-slate-800 pl-1.5 font-mono text-[11px]">
+        {/* Warp Switches */}
+        <div className="flex items-center border border-white/[0.08] bg-[#0b0f17]">
           {speedOptions.map((speed) => (
             <button
               key={speed}
-              onClick={() => setSimSpeed(speed)}
-              className={`px-1.5 py-0.5 rounded transition-all ${
+              onClick={() => {
+                if (isSimPaused) toggleSimPause();
+                setSimSpeed(speed);
+              }}
+              className={`h-5 px-2 text-[10px] font-mono uppercase tracking-wider transition-colors border-r border-white/[0.08] last:border-r-0 ${
                 simSpeed === speed && !isSimPaused
-                  ? 'bg-cyan-500 text-slate-950 font-bold'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-sky-500 text-slate-950 font-bold'
+                  : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
               }`}
             >
-              {speed}x
+              [{speed}X]
             </button>
           ))}
+          <button
+            onClick={toggleSimPause}
+            className={`h-5 px-2 text-[10px] font-mono uppercase tracking-wider transition-colors ${
+              isSimPaused
+                ? 'bg-amber-500 text-slate-950 font-bold'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+            }`}
+          >
+            {isSimPaused ? '[RESUME]' : '[PAUSE]'}
+          </button>
         </div>
       </div>
 
-      {/* Right Controls: Camera, Kessler, Cinema & B2B API */}
-      <div className="flex items-center gap-2">
-        {/* Camera Mode: Segmented Toggle [ Global | TCA Focus ] */}
-        <div className="flex items-center p-0.5 rounded-lg bg-slate-900/90 border border-slate-800 font-mono text-[11px]">
+      {/* Right Cluster: Camera Modes, Kessler Trigger, B2B API & Cinema Mode */}
+      <div className="flex items-center gap-1.5">
+        {/* Camera Mode Hardware Switch */}
+        <div className="flex items-center border border-white/[0.08] bg-[#0b0f17]">
           <button
             onClick={() => setCameraFocus('GLOBAL')}
-            className={`px-2.5 py-1 rounded-md flex items-center gap-1.5 transition-all ${
+            className={`h-6 px-2 text-[10px] font-mono uppercase tracking-wider border-r border-white/[0.08] transition-colors ${
               cameraFocus === 'GLOBAL'
-                ? 'bg-cyan-500 text-slate-950 font-bold shadow-[0_0_10px_rgba(6,182,212,0.4)]'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-sky-500 text-slate-950 font-bold'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
             }`}
-            title="Switch to Full Global Earth & Catalog Orbit View"
           >
-            <Globe className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">GLOBAL</span>
+            GLOBAL
           </button>
           <button
             onClick={() => setCameraFocus('CONJUNCTION')}
-            className={`px-2.5 py-1 rounded-md flex items-center gap-1.5 transition-all ${
+            className={`h-6 px-2 text-[10px] font-mono uppercase tracking-wider transition-colors ${
               cameraFocus === 'CONJUNCTION'
-                ? 'bg-cyan-500 text-slate-950 font-bold shadow-[0_0_10px_rgba(6,182,212,0.4)]'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-sky-500 text-slate-950 font-bold'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
             }`}
-            title="Fly to Close-up TCA Encounter & Trajectory Inspection"
           >
-            <Crosshair className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">TCA FOCUS</span>
+            TCA-LOCK
           </button>
         </div>
 
-        {/* Trigger Kessler Demo */}
+        {/* Kessler Cascade Simulation Trigger */}
         <button
           onClick={toggleKesslerDemo}
-          className={`px-2.5 py-1.5 rounded-lg border font-mono text-[11px] flex items-center gap-1.5 transition-all ${
+          className={`h-6 px-2.5 text-[10px] font-mono uppercase tracking-wider border transition-colors ${
             kesslerDemo
-              ? 'bg-red-500/20 border-red-500/60 text-red-300 shadow-[0_0_12px_rgba(239,68,68,0.4)]'
-              : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:border-slate-700'
+              ? 'bg-[#f43f5e] border-[#f43f5e] text-white font-bold'
+              : 'border-[#f43f5e]/40 text-[#f43f5e] hover:bg-[#f43f5e]/10'
           }`}
-          title="Toggle Kessler Debris Avalanche Demo"
+          title="Simulate Kessler Collision Avalanche"
         >
-          <Zap className={`w-3.5 h-3.5 ${kesslerDemo ? 'text-red-400 fill-red-400' : 'text-amber-400'}`} />
-          <span className="hidden sm:inline">KESSLER CASCADE</span>
+          {kesslerDemo ? '[CASCADE ACTIVE]' : 'SIMULATE KESSLER IMPACT'}
         </button>
 
-        {/* Cinema Mode (Clean Recording) */}
-        <button
-          onClick={toggleCinemaMode}
-          className={`p-1.5 rounded-lg border transition-all ${
-            cinemaMode
-              ? 'bg-cyan-500 text-slate-950 border-cyan-400 font-bold'
-              : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:border-slate-700'
-          }`}
-          title="Cinema Mode (Hide HUD for 60-FPS video recording)"
-        >
-          {cinemaMode ? <EyeOff className="w-4 h-4" /> : <Video className="w-4 h-4" />}
-        </button>
-
-        {/* B2B API Preview Modal */}
+        {/* Ephemeris Ingestion API */}
         <button
           onClick={() => setApiModalOpen(true)}
-          className="px-2.5 py-1.5 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/40 text-cyan-300 font-mono text-[11px] flex items-center gap-1.5"
+          className="h-6 px-2 text-[10px] font-mono uppercase tracking-wider border border-white/[0.08] text-slate-300 hover:text-white hover:bg-white/[0.04]"
         >
-          <Terminal className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">B2B API</span>
+          EPHEMERIS API [JSON]
+        </button>
+
+        {/* Raw HUD / Cinema Mode Toggle */}
+        <button
+          onClick={toggleCinemaMode}
+          className={`h-6 px-2 text-[10px] font-mono uppercase tracking-wider border transition-colors ${
+            cinemaMode
+              ? 'bg-sky-500 text-slate-950 border-sky-400 font-bold'
+              : 'border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.04]'
+          }`}
+          title="Toggle Raw HUD (Hotkey: C)"
+        >
+          RAW HUD [C]
         </button>
       </div>
     </header>

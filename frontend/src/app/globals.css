@@ -1,12 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --ease-emil-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-emil-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --color-surface-base: #06080c;
+  --color-surface-header: #0b0f17;
+  --color-hairline: rgba(255, 255, 255, 0.08);
+  --color-hairline-accent: rgba(56, 189, 248, 0.3);
+  --color-accent-sky: #38bdf8;
+  --color-alert-crimson: #f43f5e;
+  --color-caution-amber: #f59e0b;
+  --color-nominal-emerald: #10b981;
 }
 
 * {
@@ -14,69 +20,131 @@
 }
 
 body {
-  background-color: #03050a;
+  background-color: #06080c;
   color: #e2e8f0;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   overflow: hidden;
   user-select: none;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Monospace telemetry numbers */
-.font-mono-telemetry {
+/* Strict Monospace & Numeric Discipline */
+.font-mono, .font-mono-telemetry {
   font-family: 'JetBrains Mono', monospace;
   font-feature-settings: 'tnum' on, 'zero' on;
 }
 
-/* Emil Kowalski Button & Pressable Feedback */
-button, .pressable {
-  transition: transform 160ms var(--ease-emil-out), background-color 160ms ease, border-color 160ms ease;
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
 
-button:active, .pressable:active {
-  transform: scale(0.97);
-}
-
-/* Glassmorphism panels */
-.glass-panel {
-  background: rgba(5, 8, 17, 0.78);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(6, 182, 212, 0.18);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
-}
-
-.glass-panel-subtle {
-  background: rgba(8, 13, 28, 0.65);
+/* Industrial Workstation Hairline Panel */
+.console-panel {
+  background: rgba(6, 8, 12, 0.94);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0px;
 }
 
-/* Glowing accent borders */
-.glow-cyan {
-  box-shadow: 0 0 20px -3px rgba(6, 182, 212, 0.3);
+.console-header {
+  background: #0b0f17;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.glow-crimson {
-  box-shadow: 0 0 20px -3px rgba(239, 68, 68, 0.4);
+/* Tactical Corner Crosshairs (+) */
+.reticle-corner {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
 }
 
-/* Custom scrollbar for HUD panels */
+.reticle-tl {
+  top: 8px;
+  left: 8px;
+  border-top: 1px solid rgba(56, 189, 248, 0.5);
+  border-left: 1px solid rgba(56, 189, 248, 0.5);
+}
+
+.reticle-tr {
+  top: 8px;
+  right: 8px;
+  border-top: 1px solid rgba(56, 189, 248, 0.5);
+  border-right: 1px solid rgba(56, 189, 248, 0.5);
+}
+
+.reticle-bl {
+  bottom: 8px;
+  left: 8px;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.5);
+  border-left: 1px solid rgba(56, 189, 248, 0.5);
+}
+
+.reticle-br {
+  bottom: 8px;
+  right: 8px;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.5);
+  border-right: 1px solid rgba(56, 189, 248, 0.5);
+}
+
+/* Status LEDs */
+.status-led {
+  width: 6px;
+  height: 6px;
+  border-radius: 0px;
+  display: inline-block;
+}
+
+.status-led-nominal {
+  background-color: #10b981;
+}
+
+.status-led-critical {
+  background-color: #f43f5e;
+  animation: pulse-crit 1s infinite;
+}
+
+.status-led-warning {
+  background-color: #f59e0b;
+}
+
+.status-led-sky {
+  background-color: #38bdf8;
+}
+
+@keyframes pulse-crit {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Crisp Industrial Scrollbar */
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 3px;
+  height: 3px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(5, 8, 17, 0.5);
+  background: #06080c;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(6, 182, 212, 0.3);
-  border-radius: 2px;
+  background: #1e293b;
+  border-radius: 0px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(6, 182, 212, 0.6);
+  background: #334155;
 }
+
+/* Tactile Flat Buttons */
+button {
+  border-radius: 0px;
+  transition: background-color 100ms ease, border-color 100ms ease, color 100ms ease;
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
