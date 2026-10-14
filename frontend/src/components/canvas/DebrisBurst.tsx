@@ -87,15 +87,11 @@ export const DebrisBurst: React.FC<DebrisBurstProps> = ({ origin, active }) => {
       <bufferGeometry ref={geoRef}>
         <bufferAttribute
           attach="attributes-position"
-          count={PARTICLE_COUNT}
-          array={offsets}
-          itemSize={3}
+          args={[offsets, 3]}
         />
         <bufferAttribute
           attach="attributes-color"
-          count={PARTICLE_COUNT}
-          array={baseColors}
-          itemSize={3}
+          args={[baseColors, 3]}
         />
       </bufferGeometry>
       <pointsMaterial
