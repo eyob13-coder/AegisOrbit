@@ -11,7 +11,13 @@ export const ApiModal: React.FC = () => {
 
   if (!isApiModalOpen) return null;
 
-  const curlSnippet = `curl -X POST "http://localhost:8000/api/v1/b2b/screen-ephemeris" \\
+  const apiBase =
+    process.env.NEXT_PUBLIC_API_URL ||
+    (typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+      ? 'https://aegisorbit-api.onrender.com'
+      : 'http://localhost:8000');
+
+  const curlSnippet = `curl -X POST "${apiBase}/api/v1/b2b/screen-ephemeris" \\
   -H "Content-Type: application/json" \\
   -d '{
     "satellite_name": "STARLINK-MISSION-BUS",
@@ -23,7 +29,7 @@ export const ApiModal: React.FC = () => {
 
   const pythonSnippet = `import requests
 
-API_URL = "http://localhost:8000/api/v1/b2b/screen-ephemeris"
+API_URL = "${apiBase}/api/v1/b2b/screen-ephemeris"
 payload = {
     "satellite_name": "STARLINK-MISSION-BUS",
     "line1": "1 44713U 19074A   24080.50000000  .00001245  00000+0  98421-4 0  9993",
@@ -123,7 +129,7 @@ print(f"Detected {data['conjunctions_found']} close approaches.")`;
         <div className="flex items-center justify-between px-3 py-2 border-t border-white/[0.08] bg-[#0b0f17] text-[10px] font-mono text-slate-400">
           <span>LATENCY: &lt;50ms // THREADPOOL ISOLATED</span>
           <a
-            href="http://localhost:8000/docs"
+            href={`${apiBase}/docs`}
             target="_blank"
             rel="noreferrer"
             className="text-sky-400 hover:underline"
